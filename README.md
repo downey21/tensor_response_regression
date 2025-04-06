@@ -1,11 +1,13 @@
-# Tensor Graphical Model
+# Tensor Response Regression
 
-A repository for exploring and developing methods in tensor graphical models.
+A repository for exploring and developing methods in tensor response regression.
 
 ## References
 
 This repository is inspired by the following papers:
 
-- Min, Keqian, Qing Mai, and Xin Zhang. "Fast and separable estimation in high-dimensional tensor Gaussian graphical models." *Journal of Computational and Graphical Statistics* 31.1 (2022): 294–300.
+- Lock, Eric F. "Tensor-on-tensor regression." *Journal of Computational and Graphical Statistics* 27.3 (2018): 638–647.
 
-- Lyu, Xiang, et al. "Tensor graphical model: Non-convex optimization and statistical inference." *IEEE Transactions on Pattern Analysis and Machine Intelligence* 42.8 (2019): 2024–2037.
+- Sun, Will Wei, and Lexin Li. "Store: sparse tensor response regression and neuroimaging analysis." *Journal of Machine Learning Research* 18.135 (2017): 1–37.
+
+- Li, Lexin, and Xin Zhang. "Parsimonious tensor response regression." *Journal of the American Statistical Association* 112.519 (2017): 1131–1146.
