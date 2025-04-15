@@ -51,6 +51,57 @@ names(Results)
 # sse: sum of squared residuals at each iteration
 # sseR: value of the objective (sse+penalty) at each iteration
 
+U_list <- Results$U
+V_list <- Results$V
+R <- 2
+
+P <- sapply(U_list, nrow)
+Q <- sapply(V_list, nrow)
+
+# expand.grid
+B_manual <- matrix(0, nrow = prod(P), ncol = prod(Q))
+for (r in 1:R) {
+    u_r <- apply(expand.grid(lapply(U_list, function(U) U[, r])), 1, prod)
+    v_r <- apply(expand.grid(lapply(V_list, function(V) V[, r])), 1, prod)
+
+    B_manual <- B_manual + outer(u_r, v_r)
+}
+B_manual <- array(B_manual, dim = c(P, Q))
+
+Results$B == B_manual
+all.equal(B_manual, Results$B, tolerance = 1e-6)
+
+# kronecker
+kronecker_vecs <- function(vec_list) {
+    Reduce(kronecker, rev(vec_list))
+}
+
+B_manual <- matrix(0, nrow = prod(P), ncol = prod(Q))
+for (r in 1:R) {
+    u_r <- kronecker_vecs(lapply(U_list, function(U) U[, r]))
+    v_r <- kronecker_vecs(lapply(V_list, function(V) V[, r]))
+
+    B_manual <- B_manual + outer(u_r, v_r)
+}
+
+Results$B == B_manual
+all.equal(B_manual, Results$B, tolerance = 1e-6)
+
+# outer product
+B_manual <- array(0, dim = c(P, Q))
+for (r in 1:R) {
+    u_vecs <- lapply(U_list, function(U) U[, r])
+    v_vecs <- lapply(V_list, function(V) V[, r])
+
+    rank1_tensor <- Reduce(outer, c(u_vecs, v_vecs))
+
+    B_manual <- B_manual + rank1_tensor
+}
+
+Results$B == B_manual
+max(Results$B - B_manual)
+all.equal(B_manual, Results$B, tolerance = 1e-6)
+
 # fitted tensor value
 Y_pred <- MultiwayRegression::ctprod(X, Results$B, 2)
 
