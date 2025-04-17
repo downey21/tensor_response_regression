@@ -5,8 +5,6 @@
 ## Maintenance: Will Wei Sun
 ## Last edition: Sep 1, 2017
 
-rm(list = ls())
-
 # install.packages("https://cran.r-project.org/src/contrib/Archive/remMap/remMap_0.2-0.tar.gz", repos = NULL, type = "source")
 # install.packages("caret")
 # install.packages("rTensor")
@@ -523,7 +521,8 @@ mystor <- function(Y, X, Para, K, stdmethod = "truncate", is.symmetric = FALSE, 
 			OBJ = append(OBJ, myobj(Y,X,W,Beta))
 			W.mat = cbind(W.mat,W)
 
-			if(myobj(Y,X,W,Beta) > 1e+50 || sum(abs(W)) > 1e+50){break} ## avoid the diverging case to caused error
+			# if(myobj(Y,X,W,Beta) > 1e+50 || sum(abs(W)) > 1e+50){break} ## avoid the diverging case to caused error
+			if(!is.finite(myobj(Y,X,W,Beta)) > 1e+50 || !is.finite(sum(abs(W))) > 1e+50){break} ## avoid the diverging case to caused error
 		}	
 
 	}else{

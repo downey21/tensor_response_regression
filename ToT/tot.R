@@ -122,34 +122,80 @@ folds <- sample(rep(1:t, length.out = dim(X)[1]))
 
 R_vals <- 1:4
 lambda_vals <- c(0, 0.1, 1, 10)
-cv_errors <- matrix(
-    NA, nrow = length(R_vals), ncol = length(lambda_vals),
-    dimnames = list(paste0("R=", R_vals), paste0("lambda=", lambda_vals))
-)
 
-for (r_idx in seq_along(R_vals)) {
-    for (l_idx in seq_along(lambda_vals)) {
+# for loop
+# cv_errors <- matrix(
+#     NA, nrow = length(R_vals), ncol = length(lambda_vals),
+#     dimnames = list(paste0("R=", R_vals), paste0("lambda=", lambda_vals))
+# )
 
-        fold_errors <- numeric(t)
+# for (r_idx in seq_along(R_vals)) {
+#     for (l_idx in seq_along(lambda_vals)) {
 
-        for (k in 1:t) {
-            test_idx <- which(folds == k)
-            train_idx <- setdiff(1:dim(X)[1], test_idx)
+#         fold_errors <- numeric(t)
 
-            X_train <- X[train_idx,,,drop=FALSE]
-            Y_train <- Y[train_idx,,,drop=FALSE]
-            X_test <- X[test_idx,,,drop=FALSE]
-            Y_test <- Y[test_idx,,,drop=FALSE]
+#         for (k in 1:t) {
+#             test_idx <- which(folds == k)
+#             train_idx <- setdiff(1:dim(X)[1], test_idx)
 
-            fit <- MultiwayRegression::rrr(X_train, Y_train, R = R_vals[r_idx], lambda = lambda_vals[l_idx])
-            Y_pred <- MultiwayRegression::ctprod(X_test, fit$B, 2)
+#             X_train <- X[train_idx,,,drop=FALSE]
+#             Y_train <- Y[train_idx,,,drop=FALSE]
+#             X_test <- X[test_idx,,,drop=FALSE]
+#             Y_test <- Y[test_idx,,,drop=FALSE]
 
-            fold_errors[k] <- sum((Y_test - Y_pred)^2) # Frobenius norm squared
-        }
+#             fit <- MultiwayRegression::rrr(X_train, Y_train, R = R_vals[r_idx], lambda = lambda_vals[l_idx])
+#             Y_pred <- MultiwayRegression::ctprod(X_test, fit$B, 2)
 
-        cv_errors[r_idx, l_idx] <- mean(fold_errors)
+#             fold_errors[k] <- sum((Y_test - Y_pred)^2) # Frobenius norm squared
+#         }
+
+#         cv_errors[r_idx, l_idx] <- mean(fold_errors)
+#     }
+# }
+
+# mclapply
+param_grid <- expand.grid(R = R_vals, lambda = lambda_vals)
+
+cv_error_fn <- function(param) {
+    r <- param$R
+    lambda <- param$lambda
+
+    fold_errors <- numeric(t)
+
+    for (k in 1:t) {
+        test_idx <- which(folds == k)
+        train_idx <- setdiff(1:dim(X)[1], test_idx)
+
+        X_train <- X[train_idx,,,drop=FALSE]
+        Y_train <- Y[train_idx,,,drop=FALSE]
+        X_test <- X[test_idx,,,drop=FALSE]
+        Y_test <- Y[test_idx,,,drop=FALSE]
+
+        fit <- MultiwayRegression::rrr(X_train, Y_train, R = r, lambda = lambda)
+        Y_pred <- MultiwayRegression::ctprod(X_test, fit$B, 2)
+
+        fold_errors[k] <- sum((Y_test - Y_pred)^2)
     }
+
+    mean(fold_errors)
 }
+
+cores <- 4
+cv_results <-
+    parallel::mclapply(
+        seq_len(nrow(param_grid)),
+        function(i) cv_error_fn(param_grid[i, ]),
+        mc.cores = cores,
+        mc.set.seed = TRUE
+    )
+
+cv_errors <-
+    matrix(
+        unlist(cv_results),
+        nrow = length(R_vals),
+        ncol = length(lambda_vals),
+        dimnames = list(paste0("R=", R_vals), paste0("lambda=", lambda_vals))
+    )
 
 print(cv_errors)
 best_idx <- which(cv_errors == min(cv_errors), arr.ind = TRUE)

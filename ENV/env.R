@@ -14,7 +14,6 @@ data("bat", package = "TRES")
 x <- bat$x
 y <- bat$y
 
-## Fitting with OLS and 1D envelope method.
 fit_ols <- TRR.fit(x, y, method="standard")
 
 u <- TRRdim(x, y)$u
