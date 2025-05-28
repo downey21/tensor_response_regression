@@ -83,6 +83,7 @@ for (r in 1:R) {
 
     B_manual <- B_manual + outer(u_r, v_r)
 }
+B_manual <- array(B_manual, dim = c(P, Q))
 
 Results$B == B_manual
 all.equal(B_manual, Results$B, tolerance = 1e-6)
